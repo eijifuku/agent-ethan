@@ -3,8 +3,9 @@
 ## Requirements
 
 - Python 3.10 or newer
-- `pip install -e .` to install Agent Ethan in editable mode
-- Optional: LM Studio (or another OpenAI-compatible API) for local LLM calls
+- LLM API access (OpenAI / Gemini / Claude / OpenAI‑compatible API)
+- LangChain (langchain_core / langchain_community) installation when using conversation memory or LangChain‑bundled tools
+- Additionally, some tools may require extra libraries depending on what you use
 
 ## Environment Variables
 
@@ -14,16 +15,17 @@
 | `OPENAI_API_KEY` | When using OpenAI or compatible providers that require a key. |
 | `GEMINI_API_KEY` | API key for Google Gemini. |
 | `ANTHROPIC_API_KEY` | API key for Anthropic Claude. |
-| `ARXIV_USER_AGENT` | Custom user agent string for arXiv API requests (recommended by arXiv). |
+
+Note: Set only the keys for the providers you actually use.
 
 Use `.env` files with `python-dotenv` if you prefer not to export variables manually.
 
 ```bash
 cat <<'ENV' > .env
 OPENAI_COMPATIBLE_BASE_URL=http://127.0.0.1:1234/v1
+OPENAI_API_KEY=your-openai-api-key
 GEMINI_API_KEY=your-gemini-key
-ANTHROPIC_API_KEY=your-claude-key
-ARXIV_USER_AGENT=agent-ethan/0.1 (contact@example.com)
+ANTHROPIC_API_KEY=your-claude-key\
 ENV
 ```
 

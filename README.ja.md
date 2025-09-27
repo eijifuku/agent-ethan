@@ -10,15 +10,28 @@ Agent Ethan は LLM を中核に、ツール呼び出し・条件分岐・ルー
 >
 > ご利用は自己責任でお願いします。
 
+## 特徴
+
+- YAML 定義でほぼノーコードにエージェント構築
+- マージ戦略つき状態管理（deepmerge / replace）
+- 会話履歴の保持（LangChain ベースのアダプタ対応）
+- LangChain のツールを利用可能（任意導入）＋カスタムツール作成に対応
+- グラフ構造（LLM／ツール／ルーター／ループ／サブグラフ）によるワークフロー
+- RAG 利用（LangChain の RetrievalQA などのアダプタ経由／任意導入）
+- リトライ／タイムアウト／on_error による堅牢な実行
+- プロバイダ切替（OpenAI 互換エンドポイント、LM Studio など）
+- ツール種別（Python／HTTP／MCP）とサブグラフでの再利用
+- テスト容易性（tool_overrides によるスタブ化）
+
+
 Agent Ethan は宣言的な YAML を実行可能なワークフローへ変換します。構成要素は次の通りです。
 
 1. **メタ情報** – スキーマ版・エージェント名・既定の LLM プロバイダ／モデル・リトライ／タイムアウト・プロバイダ固有設定
 2. **ステート** – グラフ全体で扱う型付きフィールドと初期化・マージ戦略（`deepmerge` / `replace`）
 3. **プロンプト** – パーシャルとテンプレート（Jinja）を LLM ノードでレンダリング
-4. **ツール** – Python コール／HTTP／MCP へマップする宣言的ハンドル。LangChain に含まれるツールも利用可能です（別途インストール）。
-5. **RAG** - LangChainのRetrievalQAツール経由でRAGの利用が可能
-6. **グラフ** – ノード（LLM／ツール／ルーター／ループ／サブグラフ／noop）とエッジで実行・分岐を表現
-7. **サブグラフ** – 再利用可能な部分グラフ（任意）
+4. **ツール** – Python コール／HTTP／MCP へマップする宣言的ハンドル。LangChain に含まれるツールも利用可能です（別途インストール）。LangChainのRetrievalQAツール経由でRAGの利用が可能
+5. **グラフ** – ノード（LLM／ツール／ルーター／ループ／サブグラフ／noop）とエッジで実行・分岐を表現
+6. **サブグラフ** – 再利用可能な部分グラフ（任意）
 
 YAML は `agent_ethan.schema` の Pydantic モデルで検証され、`agent_ethan.builder` がツール／プロバイダを解決して `AgentRuntime` を構築します。ランタイムはリトライ／タイムアウト／`on_error` を考慮しながら順次ノードを実行します。
 
@@ -55,12 +68,12 @@ meta:
   schema_version: 1
   name: demo
   defaults:
-    llm: local:google/gemma-3-12b
+    llm: openai:gpt-4o-mini
   providers:
-    local:
-      type: openai_compatible
-      base_url: "{{env.OPENAI_COMPATIBLE_BASE_URL}}"
-      model: google/gemma-3-12b
+    openai:
+      type: openai
+      client_kwargs:
+        api_key: "{{env.OPENAI_API_KEY}}"
 
 state:
   shape:
@@ -134,7 +147,7 @@ state:
 
 詳細は `examples/memory_agent.yaml` および `docs/ja/configuration.md` を参照してください (Redis や SQLite、独自実装のアダプタも利用可能です)。
 
-- 例を実行する前に `OPENAI_COMPATIBLE_BASE_URL` などのプロバイダ用環境変数をセットしてください。
+- 例を実行する前に `OPENAI_API_KEY` を含むプロバイダ向け環境変数などのプロバイダ用環境変数をセットしてください。
 - `python examples/arxiv_example.py "lightgbm 時系列 特徴量エンジニアリング"` を実行すると、関連論文の PDF をダウンロードし、取得結果のサマリーを生成します。
 - OpenAI を利用する場合は `OPENAI_API_KEY` を設定し、`meta.defaults.llm: openai:gpt-4o-mini` と `providers.openai` セクションを YAML に追加してください (詳細は `docs/ja/providers.md` を参照)。
 - `python examples/langchain_rag_example.py` で LangChain + Chroma + OpenAI 埋め込みによる RAG 構成を体験できます (事前に `pip install langchain-openai chromadb` と `OPENAI_API_KEY` の設定が必要)。

@@ -3,13 +3,13 @@
 ## Missing Environment Variables
 
 ```
-AgentRuntimeError: environment variable 'OPENAI_COMPATIBLE_BASE_URL' is not set
+AgentRuntimeError: environment variable 'OPENAI_API_KEY' is not set
 ```
 
 Set the variable before running the agent:
 
 ```bash
-export OPENAI_COMPATIBLE_BASE_URL=http://127.0.0.1:1234/v1
+export OPENAI_API_KEY=sk-your-key
 ```
 
 ## Node Fails Without Handler
@@ -18,16 +18,7 @@ export OPENAI_COMPATIBLE_BASE_URL=http://127.0.0.1:1234/v1
 NodeExecutionError: node 'filter' failed without on_error handler: type=llm, prompt=filter_results, exception=...
 ```
 
-Add an `on_error` block to the node or ensure the upstream service (LM Studio) is reachable.
-
-## arXiv Requests Failing
-
-- Ensure outbound network access to `https://export.arxiv.org/` is allowed.
-- Set `ARXIV_USER_AGENT` to a descriptive value; arXiv may throttle generic user agents.
-
-## PDF Downloads Return 301
-
-The downloader follows redirects automatically. If you run a custom tool, add `follow_redirects=True` to the `httpx.Client.get` call.
+Add an `on_error` block to the node or ensure the upstream service (OpenAI API or compatible backend) is reachable.
 
 ## JSON Parsing Errors
 

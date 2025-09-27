@@ -2,18 +2,17 @@ meta:
   schema_version: 1
   name: arxiv_keyword_agent
   defaults:
-    llm: local:google/gemma-3-12b
+    llm: openai:gpt-4o-mini
     temp: 0.2
     retry:
       max_attempts: 2
       backoff: 1.0
   providers:
-    local:
-      type: openai_compatible
-      base_url: "{{env.OPENAI_COMPATIBLE_BASE_URL}}"
-      model: google/gemma-3-12b
+    openai:
+      type: openai
       temperature: 0.2
-      request_timeout: 120
+      client_kwargs:
+        api_key: "{{env.OPENAI_API_KEY}}"
       kwargs:
         max_tokens: 2048
 

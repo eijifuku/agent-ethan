@@ -16,12 +16,12 @@ meta:
   schema_version: 1
   name: support_agent
   defaults:
-    llm: local:google/gemma-3-12b
+    llm: openai:gpt-4o-mini
   providers:
-    local:
-      type: openai_compatible
-      base_url: "{{env.OPENAI_COMPATIBLE_BASE_URL}}"
-      model: google/gemma-3-12b
+    openai:
+      type: openai
+      client_kwargs:
+        api_key: "{{env.OPENAI_API_KEY}}"
 
 state:
   shape:

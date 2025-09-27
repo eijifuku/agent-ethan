@@ -84,7 +84,6 @@ python examples/langchain_rag_vectorstore_example.py
 
 ```bash
 export OPENAI_COMPATIBLE_BASE_URL=http://host.docker.internal:1234/v1
-export ARXIV_USER_AGENT="agent-ethan/0.1 (contact@example.com)"
 python examples/arxiv_example.py "lightgbm 時系列 特徴量エンジニアリング"
 ```
 

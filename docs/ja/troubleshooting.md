@@ -3,13 +3,13 @@
 ## 環境変数が未設定
 
 ```
-AgentRuntimeError: environment variable 'OPENAI_COMPATIBLE_BASE_URL' is not set
+AgentRuntimeError: environment variable 'OPENAI_API_KEY' is not set
 ```
 
 実行前に環境変数を設定してください。
 
 ```bash
-export OPENAI_COMPATIBLE_BASE_URL=http://127.0.0.1:1234/v1
+export OPENAI_API_KEY=sk-your-key
 ```
 
 ## ノード失敗時のエラー
@@ -18,16 +18,7 @@ export OPENAI_COMPATIBLE_BASE_URL=http://127.0.0.1:1234/v1
 NodeExecutionError: node 'filter' failed without on_error handler: ...
 ```
 
-`on_error` を設定するか、バックエンド (例: LM Studio) が起動しているか確認します。
-
-## arXiv 検索でネットワークエラー
-
-- `Temporary failure in name resolution` は DNS やネットワーク設定を確認してください。
-- `ARXIV_USER_AGENT` を明示的に設定するとアクセス拒否を回避できます。
-
-## PDF ダウンロード時のリダイレクト
-
-`tools/arxiv_local.py#download` は自動でリダイレクトを追跡します。独自ツールを実装する場合は `follow_redirects=True` を指定してください。
+`on_error` を設定するか、バックエンド (例: OpenAI API) が利用できるか確認します。
 
 ## JSON 解析エラー
 

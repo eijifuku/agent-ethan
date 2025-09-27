@@ -92,7 +92,6 @@ Transforms a natural-language request into a curated list of arXiv papers and do
 
 ```bash
 export OPENAI_COMPATIBLE_BASE_URL=http://host.docker.internal:1234/v1
-export ARXIV_USER_AGENT="agent-ethan/0.1 (contact@example.com)"
 python examples/arxiv_example.py "lightgbm feature engineering for time series"
 ```
 

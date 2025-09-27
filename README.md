@@ -13,15 +13,27 @@ Agent Ethan is an LLM‑centric agent runtime: it orchestrates prompts, tools, r
 >
 > Use at your own risk.
 
+## Features
+
+- Build agents almost no‑code with declarative YAML
+- State management with merge strategies (deepmerge / replace)
+- Conversation memory (LangChain adapters available)
+- Use the LangChain tool ecosystem (optional) and create custom tools
+- Graph‑based workflows (LLM / tool / router / loop / subgraph)
+- RAG via LangChain RetrievalQA (optional adapter)
+- Robust execution with retries, timeouts, and on_error
+- Provider‑agnostic: OpenAI‑compatible endpoints, LM Studio, etc.
+- Tool kinds (Python / HTTP / MCP) and reusable subgraphs
+- Testability via tool_overrides and deterministic mapping
+
 Agent Ethan compiles declarative YAML into an executable workflow. Each configuration defines:
 
 1. **Metadata** – schema version, agent name, default LLM provider/model, retry/timeout defaults, provider-specific settings
 2. **State** – typed fields managed across the graph, with initialization and merge strategy (`deepmerge` or `replace`)
 3. **Prompts** – partials and templates rendered (via Jinja) for LLM nodes
-4. **Tools** – declarative handles mapping to Python callables, HTTP or MCP adapters. Tools included in LangChain are also available (install separately).
-5. **RAG** – available via LangChain's RetrievalQA tools through the adapter (optional dependency)
-6. **Graph** – nodes (LLM, tool, router, loop, subgraph, noop) and edges describing execution and routing
-7. **Subgraphs** – optional reusable graphs
+4. **Tools** – declarative handles mapping to Python callables, HTTP or MCP adapters. Tools included in LangChain are also available (install separately).RAG available via LangChain's RetrievalQA tools through the adapter (optional dependency)
+5. **Graph** – nodes (LLM, tool, router, loop, subgraph, noop) and edges describing execution and routing
+6. **Subgraphs** – optional reusable graphs
 
 The YAML is validated by Pydantic models in `agent_ethan.schema`, and `agent_ethan.builder` resolves tools/providers and produces an `AgentRuntime` that executes nodes while honoring retries, timeouts, and `on_error`.
 
@@ -58,12 +70,12 @@ meta:
   schema_version: 1
   name: demo
   defaults:
-    llm: local:google/gemma-3-12b
+    llm: openai:gpt-4o-mini
   providers:
-    local:
-      type: openai_compatible
-      base_url: "{{env.OPENAI_COMPATIBLE_BASE_URL}}"
-      model: google/gemma-3-12b
+    openai:
+      type: openai
+      client_kwargs:
+        api_key: "{{env.OPENAI_API_KEY}}"
 
 state:
   shape:
@@ -137,7 +149,7 @@ state:
 
 See `examples/memory_agent.yaml` and `docs/en/configuration.md` for more combinations (Redis, SQLite, custom adapters, etc.).
 
-- Set `OPENAI_COMPATIBLE_BASE_URL` before running examples.
+- Set `OPENAI_API_KEY` before running examples.
 - `python examples/arxiv_example.py "lightgbm time series feature engineering"` downloads matching papers and saves a factual report.
 - To target OpenAI directly, export `OPENAI_API_KEY` and set `meta.defaults.llm: openai:gpt-4o-mini` with a corresponding `providers.openai` block (see `docs/en/providers.md`).
 - `python examples/langchain_rag_example.py` demonstrates a LangChain-powered RAG workflow backed by Chroma and OpenAI embeddings (requires `pip install langchain-openai chromadb` and `OPENAI_API_KEY`).

@@ -3,8 +3,9 @@
 ## 必要条件
 
 - Python 3.10 以上
-- `pip install -e .` で Agent Ethan をインストール
-- 任意: LM Studio などの OpenAI 互換 API (ローカル LLM 用)
+- LLMのAPI接続(OenAI/Gemini/Claude/OpenAI互換API)
+- LangChain(langchain_core/langchain_community)のインストール（チャット履歴の保持やLangChain同梱のツールを使用する場合）
+- その他、使用するツールによってはライブラリの追加インストールが必要となる場合があります。
 
 ## 環境変数
 
@@ -14,16 +15,15 @@
 | `OPENAI_API_KEY` | OpenAI 互換 API を利用する際のキー |
 | `GEMINI_API_KEY` | Google Gemini の API キー |
 | `ANTHROPIC_API_KEY` | Anthropic Claude の API キー |
-| `ARXIV_USER_AGENT` | arXiv API へ送る User-Agent。arXiv 側は識別可能な値を推奨しています |
 
 `.env` ファイルで管理する場合:
 
 ```bash
 cat <<'ENV' > .env
 OPENAI_COMPATIBLE_BASE_URL=http://127.0.0.1:1234/v1
+OPENAI_API_KEY=your-openai-api-key
 GEMINI_API_KEY=your-gemini-key
 ANTHROPIC_API_KEY=your-claude-key
-ARXIV_USER_AGENT=agent-ethan/0.1 (contact@example.com)
 ENV
 ```
 
