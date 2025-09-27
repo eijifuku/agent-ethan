@@ -22,6 +22,7 @@ Agent Ethan は LLM を中核に、ツール呼び出し・条件分岐・ルー
 - プロバイダ切替（OpenAI 互換エンドポイント、LM Studio など）
 - ツール種別（Python／HTTP／MCP）とサブグラフでの再利用
 - テスト容易性（tool_overrides によるスタブ化）
+- stdout/jsonl/LangSmithに対応したログ出力
 
 
 Agent Ethan は宣言的な YAML を実行可能なワークフローへ変換します。構成要素は次の通りです。

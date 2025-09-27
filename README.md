@@ -25,6 +25,7 @@ Agent Ethan is an LLM‑centric agent runtime: it orchestrates prompts, tools, r
 - Provider‑agnostic: OpenAI‑compatible endpoints, LM Studio, etc.
 - Tool kinds (Python / HTTP / MCP) and reusable subgraphs
 - Testability via tool_overrides and deterministic mapping
+- Logging outputs: stdout, JSONL, and LangSmith
 
 Agent Ethan compiles declarative YAML into an executable workflow. Each configuration defines:
 
