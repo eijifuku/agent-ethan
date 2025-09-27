@@ -36,12 +36,11 @@ LangChain の Chroma ベクターストアと OpenAI 埋め込みをツール経
 
 - `tools/langchain_rag.py#ChromaRetrievalQATool` が `examples/corpus` の Markdown を読み込み、OpenAI 埋め込みで Chroma ストアを構築します。
 - ツールの返すドラフト回答とスニペットを LLM ノードで再構成し、最終回答を生成します。
-- 実行には `OPENAI_API_KEY` と `pip install langchain-openai chromadb` が必要です。
+- `OPENAI_API_KEY` を設定すれば追加インストールなしで動作します（`langchain-openai` / `chromadb` は同梱されています）。
 
 ### 実行
 
 ```bash
-pip install langchain-openai chromadb
 export OPENAI_API_KEY=sk-your-key
 python examples/langchain_rag_example.py
 ```
@@ -61,7 +60,6 @@ Markdown ファイルの内容に基づいた回答と参照元ファイルの�
 ### 実行
 
 ```bash
-pip install langchain-openai chromadb
 export OPENAI_API_KEY=sk-your-key
 python examples/langchain_rag_vectorstore_example.py
 ```

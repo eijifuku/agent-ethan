@@ -1,12 +1,15 @@
+import argparse
 import os
 import sys
 from pathlib import Path
-import argparse
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 os.environ.setdefault("OPENAI_COMPATIBLE_BASE_URL", "http://127.0.0.1:1234/v1")
 
 from agent_ethan.builder import NodeExecutionError, build_agent_from_path
+
+
+AGENT_CONFIG_PATH = Path(__file__).resolve().parent / "arxiv_agent.yaml"
 
 
 def main() -> None:
@@ -22,7 +25,7 @@ def main() -> None:
 
     request = " ".join(args.request)
 
-    runtime = build_agent_from_path("examples/arxiv_agent.yaml")
+    runtime = build_agent_from_path(str(AGENT_CONFIG_PATH))
     try:
         inputs = {"request": request}
         if args.max_results is not None:

@@ -1,50 +1,58 @@
 # Tracing & Logging
 
-Agent Ethan includes an optional structured tracing facility that records high-level run, node, tool, and LLM events. Tracing is off by default; enable it with environment variables so runtime behaviour remains unchanged unless you opt in.
+Agent Ethan includes an optional structured tracing facility that records high-level run, node, tool, and LLM events. Tracing is configured in YAML under `meta.defaults.tracing`; when it is omitted or disabled the runtime behaves exactly as before.
 
 ## Quick Start
 
-```bash
-export AE_TRACE_ENABLED=true
-export AE_TRACE_SINKS=stdout,jsonl
-python -m agent_ethan.examples.simple_agent
+Add a tracing block to your agent configuration:
+
+```yaml
+meta:
+  defaults:
+    tracing:
+      enabled: true
+      sinks: ["stdout", "jsonl"]
 ```
 
-With tracing enabled the runtime automatically emits JSON events, for example:
+Run the agent and you will see JSON events similar to:
 
 ```json
 {"ts":"2025-09-27T13:35:20.481Z","event":"run_start","run_id":"f6a0...","graph":"support_flow","level":"info"}
 ```
 
+The example configuration `examples/arxiv_agent.yaml` already enables `sinks: ["stdout"]`, so running `examples/arxiv_example.py` will stream trace events to the console out of the box.
+
 ## Configuration Reference
 
-- `AE_TRACE_ENABLED` – master on/off switch (`false` by default).
-- `AE_TRACE_SINKS` – comma-separated sinks: `stdout`, `jsonl`, `langsmith`, or `null`.
-- `AE_TRACE_SAMPLE` – sampling rate between `0.0` and `1.0` (default `1.0`).
-- `AE_TRACE_LEVEL` – minimum level to record (`debug`, `info`, `warn`, `error`; default `info`).
-- `AE_TRACE_DIR` – root directory for JSONL files (default `./logs`).
-- `AE_TRACE_LANGSMITH_PROJECT` – optional LangSmith project name.
-- `AE_TRACE_MAX_TEXT` – truncate long strings after N characters (default `2048`).
-- `AE_TRACE_DENY_KEYS` – comma-separated list of additional keys to redact.
+All properties live under `meta.defaults.tracing`.
 
-If `AE_TRACE_SINKS` is empty or resolves to `null`, the logger installs a `NullSink` that drops all events even when tracing is enabled. This is useful in sampling scenarios where non-sampled runs should avoid any logging overhead.
+- `enabled` (`bool`, default `false`) – master switch.
+- `sinks` (`list[str]`) – any combination of `stdout`, `jsonl`, `langsmith`, or `null`.
+- `sample` (`float`, default `1.0`) – sampling rate between `0.0` and `1.0`.
+- `level` (`str`, default `info`) – minimum event level (`debug` | `info` | `warn` | `error`).
+- `dir` (`str`, default `./logs`) – root directory for JSONL files.
+- `langsmith_project` (`str | null`) – optional LangSmith project name.
+- `max_text` (`int`, default `2048`) – truncate long strings after N characters.
+- `deny_keys` (`list[str]`) – additional keys to redact; defaults include `api_key`, `authorization`, `password`, `token`, `secret`, `cookie`, `session`, `client_secret`, `private_key`.
+
+If `sinks` is empty or contains `null`, the logger installs a `NullSink` that drops all events (useful for “sampled out” runs).
 
 ### Sinks
 
 - **Stdout** – prints one JSON object per line to standard output.
-- **Jsonl** – writes per-run JSONL files under `AE_TRACE_DIR/<date>/<run_id>.jsonl`.
-- **LangSmith** – forwards events to LangSmith. The optional dependency `langsmith` must be installed; otherwise the sink is silently disabled with a warning.
-- **Null** – discards everything (useful when you only want to flip sampling on/off).
+- **Jsonl** – writes per-run JSONL files under `dir/<date>/<run_id>.jsonl`.
+- **LangSmith** – forwards events to LangSmith. Install `langsmith` and supply `langsmith_project` (and the usual LangSmith environment variables).
+- **Null** – discards everything.
 
-You can combine multiple sinks, e.g. `AE_TRACE_SINKS=stdout,langsmith`.
+You can combine multiple sinks, e.g. `sinks: ["stdout", "langsmith"]`.
 
 ### Sampling & Levels
 
-When a run starts, the logger draws a random number and compares it to `AE_TRACE_SAMPLE`. If the run is not sampled, instrumentation switches to a `NullSink` so decorators return immediately. Level filtering is applied per-event after masking; set `AE_TRACE_LEVEL=debug` to capture router decisions and loop summaries.
+At run start the logger draws a random number and compares it with `sample`. If the run is not selected the decorators fall back to a `NullSink`, so the overhead stays negligible. Level filtering is applied per-event after masking; set `level: debug` to capture router decisions and loop summaries.
 
 ### Masking & Payload Summaries
 
-The logger guards against leaking secrets by redacting values whose keys match a deny list (`api_key`, `token`, `password`, etc.) and by applying regex-based replacements (e.g. `Bearer ...`). You can extend the deny list via `AE_TRACE_DENY_KEYS=client_secret,my_secret`. Long strings are truncated to `AE_TRACE_MAX_TEXT` characters; summaries store the original key set and a preview rather than full payloads.
+The logger redacts values whose keys match the deny list (`deny_keys`) and applies regex-based replacements (for example, `Bearer …`). Long strings are truncated to `max_text` characters, and summaries record the key set and a short preview rather than the full payload.
 
 ### Event Types
 
@@ -56,11 +64,11 @@ Instrumentation touches the main runtime layers:
 - **LLMs** – `llm_start`, `llm_end`, and `llm_exception` include provider/model metadata and prompt/output summaries.
 - **Routers & Loops** – additional `router_decision` and `loop_complete` events capture branch selection and iteration counts.
 
-Every event shares `ts`, `run_id`, `span_id`, and `trace_id` fields to help visualise execution flow. Spans nest based on node/tool/LLM relationships.
+Each event carries `ts`, `run_id`, `span_id`, and `trace_id` so you can reconstruct the execution flow.
 
 ## Custom Setups
 
-The module `agent_ethan.logging` exposes `configure_from_env()` and `set_log_manager()` if you need programmatic control. For instance, tests can install an in-memory sink:
+The module `agent_ethan.logging` exposes helpers in case you want to install bespoke sinks programmatically:
 
 ```python
 from agent_ethan.logging import LogManager, set_log_manager
@@ -72,16 +80,16 @@ class ListSink(Sink):
     def emit(self, event):
         self.events.append(event)
 
-sink = ListSink()
-set_log_manager(LogManager(sinks=[sink], sample_rate=1.0))
+manager = LogManager(sinks=[ListSink()], sample_rate=1.0)
+set_log_manager(manager)
 ```
 
-Keep the existing decorators in place; they automatically pick up the active `LogManager` instance. When tracing is disabled the overhead is negligible because the decorators exit early.
+Keep the built-in decorators (`@log_run`, `@log_node`, `@log_tool`, `@log_llm`) in place; they automatically reference the current `LogManager` instance.
 
 ## Troubleshooting
 
-- **No output when enabled** – ensure `AE_TRACE_SINKS` is set and not `null`; check the process has write access to `AE_TRACE_DIR`.
-- **Missing LangSmith events** – confirm `pip install langsmith` and the required environment variables (`LANGSMITH_API_KEY`, etc.) are present.
-- **Sensitive data still present** – add custom keys via `AE_TRACE_DENY_KEYS` or wrap tools/LLMs to pre-redact data before returning it.
+- **No output when enabled** – ensure `sinks` is not empty and that the process can write to `dir` when using `jsonl`.
+- **Missing LangSmith events** – install `langsmith` and populate the required credentials (`LANGSMITH_API_KEY`, etc.).
+- **Sensitive data still present** – add custom keys to `deny_keys` or redact data before returning it from your tools/LLM wrappers.
 
-Tracing is still optional; if you do not define `AE_TRACE_ENABLED` the runtime behaves exactly as before.
+Tracing remains optional—remove the `tracing` block or set `enabled: false` to turn it off.
