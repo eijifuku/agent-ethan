@@ -105,7 +105,7 @@ LLM の呼び出しが失敗した場合に備えてフォールバックツー�
 tools:
   - id: fallback
     kind: python
-    impl: "../tools/arxiv_summary.py#fallback_summary"
+    impl: "../agent_ethan/tools/arxiv_summary.py#fallback_summary"
   - id: record
     kind: noop
 

@@ -15,7 +15,7 @@ tools:
 
   - id: keyword_fallback
     kind: python
-    impl: "../tools/arxiv_keywords.py#fallback_keywords"
+    impl: "../agent_ethan/tools/arxiv_keywords.py#fallback_keywords"
     retry:
       max_attempts: 3
       backoff: 2
@@ -101,7 +101,7 @@ The MCP response must conform to the tool output schema (status/result/error). M
 | `tools/arxiv_summary.py#fallback_summary` | Builds a factual report listing the downloaded papers. |
 | `tools/json_utils.py#parse_object` | Parses a JSON string into a dictionary safely. |
 | LangChain adapter (optional) | Bridge to use LangChain's tool ecosystem (install separately). |
-| `tools/mock_tools.py` | Test utilities (`echo`, `increment`, `failing`). |
+| `agent_ethan/tools/mock_tools.py` | Test utilities (`echo`, `increment`, `failing`). |
 
 ## 5. Writing Custom Python Tools
 
@@ -209,7 +209,7 @@ tools:
   - id: knowledge_base
     kind: langchain
     mode: class
-    impl: "../tools/langchain_rag.py#ChromaRetrievalQATool"
+    impl: "../agent_ethan/tools/langchain_rag.py#ChromaRetrievalQATool"
     config:
       init:
         corpus_path: "./examples/corpus"

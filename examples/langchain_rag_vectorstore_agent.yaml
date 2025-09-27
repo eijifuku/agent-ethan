@@ -38,7 +38,7 @@ memory:
 tools:
   - id: qa_tool
     kind: python
-    impl: "../tools/langchain_stub.py#requires_override"
+    impl: "../agent_ethan/tools/langchain_stub.py#requires_override"
 
 graph:
   inputs: [query]

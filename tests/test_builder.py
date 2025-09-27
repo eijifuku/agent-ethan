@@ -97,9 +97,9 @@ BASE_CONFIG = {
         },
     },
     "tools": [
-        {"id": "echo", "kind": "python", "impl": "tools/mock_tools.py#echo"},
-        {"id": "increment", "kind": "python", "impl": "tools/mock_tools.py#increment"},
-        {"id": "fail", "kind": "python", "impl": "tools/mock_tools.py#failing"},
+        {"id": "echo", "kind": "python", "impl": "agent_ethan/tools/mock_tools.py#echo"},
+        {"id": "increment", "kind": "python", "impl": "agent_ethan/tools/mock_tools.py#increment"},
+        {"id": "fail", "kind": "python", "impl": "agent_ethan/tools/mock_tools.py#failing"},
     ],
 }
 

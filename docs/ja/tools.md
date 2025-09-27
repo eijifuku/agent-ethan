@@ -15,7 +15,7 @@ tools:
 
   - id: keyword_fallback
     kind: python
-    impl: "../tools/arxiv_keywords.py#fallback_keywords"
+    impl: "../agent_ethan/tools/arxiv_keywords.py#fallback_keywords"
     retry:
       max_attempts: 3
       backoff: 2
@@ -100,7 +100,7 @@ MCP サーバ側が標準的なレスポンス形式 (`status` / `result` / `err
 | `tools/arxiv_keywords.py#fallback_keywords` | LLM キーワードが無い場合にヒューリスティック生成 |
 | `tools/arxiv_summary.py#fallback_summary` | 取得済み論文を事実ベースで列挙 |
 | `tools/json_utils.py#parse_object` | 文字列 JSON を辞書に変換 |
-| `tools/mock_tools.py` | テスト用 (`echo`, `increment`, `failing`) |
+| `agent_ethan/tools/mock_tools.py` | テスト用 (`echo`, `increment`, `failing`) |
 
 ### LangChain のツールを使う（任意）
 
@@ -203,7 +203,7 @@ tools:
   - id: knowledge_base
     kind: langchain
     mode: class
-    impl: "../tools/langchain_rag.py#ChromaRetrievalQATool"
+    impl: "../agent_ethan/tools/langchain_rag.py#ChromaRetrievalQATool"
     config:
       init:
         corpus_path: "./examples/corpus"

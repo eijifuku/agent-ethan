@@ -1,8 +1,8 @@
 import unittest
 
-from tools import arxiv_filter
-from tools import arxiv_keywords
-from tools import arxiv_summary
+from agent_ethan.tools import arxiv_filter
+from agent_ethan.tools import arxiv_keywords
+from agent_ethan.tools import arxiv_summary
 
 
 class ArxivKeywordFallbackTestCase(unittest.TestCase):

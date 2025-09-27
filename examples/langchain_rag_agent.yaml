@@ -39,7 +39,7 @@ tools:
   - id: knowledge_base
     kind: langchain
     mode: class
-    impl: "../tools/langchain_rag.py#ChromaRetrievalQATool"
+    impl: "../agent_ethan/tools/langchain_rag.py#ChromaRetrievalQATool"
     config:
       init:
         corpus_path: "./examples/corpus"

@@ -40,10 +40,10 @@ prompts:
 tools:
   - id: mcp_call
     kind: mcp
-    impl: "../tools/mcp_call.py#invoke"
+    impl: "../agent_ethan/tools/mcp_call.py#invoke"
   - id: local_search
     kind: python
-    impl: "../tools/local_rag.py#search"
+    impl: "../agent_ethan/tools/local_rag.py#search"
 
 graph:
   inputs: [query]

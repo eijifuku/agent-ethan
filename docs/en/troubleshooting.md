@@ -44,7 +44,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 ## Common Test Failures
 
-- `FileNotFoundError` for tool modules indicates the YAML path is incorrect relative to the YAML file; use `../tools/...` when the YAML lives in `examples/`.
+- `FileNotFoundError` for tool modules indicates the YAML path is incorrect relative to the YAML file; use `../agent_ethan/tools/...` when the YAML lives in `examples/`.
 - Failing unit tests in CI can often be reproduced locally with `python -m unittest` before pushing.
 
 For more advanced debugging, instrument your tools to return additional metadata under custom keys and inspect them via the runtime state.

@@ -80,19 +80,19 @@ prompts:
 tools:
   - id: arxiv_search
     kind: python
-    impl: "../tools/arxiv_local.py#search"
+    impl: "../agent_ethan/tools/arxiv_local.py#search"
   - id: arxiv_download
     kind: python
-    impl: "../tools/arxiv_local.py#download"
+    impl: "../agent_ethan/tools/arxiv_local.py#download"
   - id: keyword_fallback
     kind: python
-    impl: "../tools/arxiv_keywords.py#fallback_keywords"
+    impl: "../agent_ethan/tools/arxiv_keywords.py#fallback_keywords"
   - id: summary_fallback
     kind: python
-    impl: "../tools/arxiv_summary.py#fallback_summary"
+    impl: "../agent_ethan/tools/arxiv_summary.py#fallback_summary"
   - id: arxiv_select
     kind: python
-    impl: "../tools/arxiv_filter.py#parse_selection"
+    impl: "../agent_ethan/tools/arxiv_filter.py#parse_selection"
 
 
 graph:

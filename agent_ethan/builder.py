@@ -1050,7 +1050,12 @@ def _resolve_callable(impl: str, base_path: Path) -> Callable[..., Any]:
         raise ValueError(f"tool impl '{impl}' must contain '#' separating callable name")
 
     if module_path.endswith(".py"):
-        module = _load_module_from_file(base_path / module_path)
+        candidate_path = (base_path / module_path).resolve()
+        if not candidate_path.exists():
+            fallback = _maybe_resolve_tool_path(module_path)
+            if fallback is not None:
+                candidate_path = fallback
+        module = _load_module_from_file(candidate_path)
     else:
         dotted = module_path.replace("/", ".")
         module = importlib.import_module(dotted)
@@ -1075,6 +1080,18 @@ def _load_module_from_file(path: Path) -> ModuleType:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)  # type: ignore[call-arg]
     return module
+
+
+def _maybe_resolve_tool_path(module_path: str) -> Optional[Path]:
+    module_path_obj = Path(module_path)
+    try:
+        index = module_path_obj.parts.index("tools")
+    except ValueError:
+        return None
+
+    relative_after_tools = Path(*module_path_obj.parts[index + 1 :])
+    candidate = Path(__file__).resolve().parent / "tools" / relative_after_tools
+    return candidate if candidate.exists() else None
 
 
 def _build_graphs(config: AgentConfig) -> tuple[GraphDefinition, Dict[str, GraphDefinition]]:

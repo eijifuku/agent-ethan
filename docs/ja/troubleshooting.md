@@ -35,7 +35,7 @@ LLM が JSON を返さなくても `tools/arxiv_filter.py#parse_selection` が�
 
 ## テストがファイルを見つけられない
 
-YAML 内の `impl` パスは YAML ファイルからの相対パスです。`examples/` 配下では `../tools/...` のように指定してください。
+YAML 内の `impl` パスは YAML ファイルからの相対パスです。`examples/` 配下では `../agent_ethan/tools/...` のように指定してください。
 
 ## 調査のヒント
 

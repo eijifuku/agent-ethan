@@ -114,7 +114,7 @@ If the LLM might fail, add a fallback tool:
 tools:
   - id: fallback
     kind: python
-    impl: "../tools/arxiv_summary.py#fallback_summary"
+    impl: "../agent_ethan/tools/arxiv_summary.py#fallback_summary"
 
   - id: record
     kind: noop

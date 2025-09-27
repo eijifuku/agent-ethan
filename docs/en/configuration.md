@@ -223,7 +223,7 @@ tools:
 
   - id: keyword_local
     kind: python
-    impl: "../tools/arxiv_keywords.py#fallback_keywords"
+    impl: "../agent_ethan/tools/arxiv_keywords.py#fallback_keywords"
     retry:
       max_attempts: 3
       backoff: 2
@@ -242,7 +242,7 @@ tools:
 | `config` | Arbitrary options supplied to the tool at call time. |
 | `retry` / `timeout` | Optional overrides that mirror `meta.defaults`. |
 
-> **Relative paths** – When your YAML lives in `examples/`, reference sibling tools with `../tools/...`.
+> **Relative paths** – When your YAML lives in `examples/`, reference project tools with `../agent_ethan/tools/...` (legacy `../agent_ethan/tools/...` still resolves).
 
 > **LangChain RAG** – Point `kind: langchain` tools to `tools/langchain_rag.py#ChromaRetrievalQATool` (see `examples/langchain_rag_agent.yaml`) to reuse LangChain's Chroma vector store with OpenAI embeddings.
 
@@ -507,19 +507,19 @@ subgraphs: {}
 tools:
   - id: keyword_fallback
     kind: python
-    impl: "../tools/arxiv_keywords.py#fallback_keywords"
+    impl: "../agent_ethan/tools/arxiv_keywords.py#fallback_keywords"
   - id: arxiv_search
     kind: python
-    impl: "../tools/arxiv_local.py#search"
+    impl: "../agent_ethan/tools/arxiv_local.py#search"
   - id: arxiv_select
     kind: python
-    impl: "../tools/arxiv_filter.py#parse_selection"
+    impl: "../agent_ethan/tools/arxiv_filter.py#parse_selection"
   - id: arxiv_download
     kind: python
-    impl: "../tools/arxiv_local.py#download"
+    impl: "../agent_ethan/tools/arxiv_local.py#download"
   - id: summary_fallback
     kind: python
-    impl: "../tools/arxiv_summary.py#fallback_summary"
+    impl: "../agent_ethan/tools/arxiv_summary.py#fallback_summary"
 
 graph:
   inputs: [request]

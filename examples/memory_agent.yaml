@@ -35,7 +35,7 @@ prompts:
 tools:
   - id: echo_tool
     kind: python
-    impl: "../tools/mock_tools.py#echo"
+    impl: "../agent_ethan/tools/mock_tools.py#echo"
 
 graph:
   inputs: [query, session_id]

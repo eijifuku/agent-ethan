@@ -217,7 +217,7 @@ tools:
 
   - id: keyword_local
     kind: python
-    impl: "../tools/arxiv_keywords.py#fallback_keywords"
+    impl: "../agent_ethan/tools/arxiv_keywords.py#fallback_keywords"
     retry:
       max_attempts: 3
       backoff: 2
@@ -236,7 +236,7 @@ tools:
 | `config` | 任意の設定値。ツール呼び出し時に渡されます。 |
 | `retry` / `timeout` | ツール単位の上書き設定。 |
 
-> YAML が `examples/` にある場合、ツールは `../tools/...` のように相対パスで指定します。
+> YAML が `examples/` にある場合、`../agent_ethan/tools/...` のように指定してください (互換のため `../agent_ethan/tools/...` も解決されます)。
 
 > **LangChain RAG** – `kind: langchain` で `tools/langchain_rag.py#ChromaRetrievalQATool` を指定すると、OpenAI 埋め込み + Chroma を使った RAG を YAML からそのまま呼び出せます (`examples/langchain_rag_agent.yaml` を参照)。
 
@@ -490,19 +490,19 @@ prompts:
 tools:
   - id: keyword_fallback
     kind: python
-    impl: "../tools/arxiv_keywords.py#fallback_keywords"
+    impl: "../agent_ethan/tools/arxiv_keywords.py#fallback_keywords"
   - id: arxiv_search
     kind: python
-    impl: "../tools/arxiv_local.py#search"
+    impl: "../agent_ethan/tools/arxiv_local.py#search"
   - id: arxiv_select
     kind: python
-    impl: "../tools/arxiv_filter.py#parse_selection"
+    impl: "../agent_ethan/tools/arxiv_filter.py#parse_selection"
   - id: arxiv_download
     kind: python
-    impl: "../tools/arxiv_local.py#download"
+    impl: "../agent_ethan/tools/arxiv_local.py#download"
   - id: summary_fallback
     kind: python
-    impl: "../tools/arxiv_summary.py#fallback_summary"
+    impl: "../agent_ethan/tools/arxiv_summary.py#fallback_summary"
 
 graph:
   inputs: [request]
