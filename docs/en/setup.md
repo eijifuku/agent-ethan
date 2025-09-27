@@ -4,7 +4,7 @@
 
 - Python 3.10 or newer
 - LLM API access (OpenAI / Gemini / Claude / OpenAI‑compatible API)
-- LangChain (langchain_core / langchain_community) installation when using conversation memory or LangChain‑bundled tools
+- LangChain support is bundled (`langchain-core`, `langchain-community`, `langchain-openai`) so the built-in adapters and examples run without extra installs
 - Additionally, some tools may require extra libraries depending on what you use
 
 ## Environment Variables

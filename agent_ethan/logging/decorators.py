@@ -12,12 +12,11 @@ from .context import run_id_var, trace_enabled_var, trace_id_var
 
 
 def log_run(fn: Callable[..., Any]) -> Callable[..., Any]:
-    manager = get_log_manager()
-
     if inspect.iscoroutinefunction(fn):
 
         @functools.wraps(fn)
         async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+            manager = get_log_manager()
             if not manager.enabled:
                 return await fn(*args, **kwargs)
 
@@ -70,6 +69,7 @@ def log_run(fn: Callable[..., Any]) -> Callable[..., Any]:
 
     @functools.wraps(fn)
     def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
+        manager = get_log_manager()
         if not manager.enabled:
             return fn(*args, **kwargs)
 
@@ -122,9 +122,8 @@ def log_run(fn: Callable[..., Any]) -> Callable[..., Any]:
 
 
 def log_node(fn: Callable[..., Any]) -> Callable[..., Any]:
-    manager = get_log_manager()
-
     def before(args: Tuple[Any, ...], kwargs: Dict[str, Any]) -> Dict[str, Any]:
+        manager = get_log_manager()
         if not manager.enabled:
             return {}
         bound = _bind_arguments(fn, args, kwargs)
@@ -135,6 +134,7 @@ def log_node(fn: Callable[..., Any]) -> Callable[..., Any]:
         node_type = getattr(node, "type", None)
         state = bound.arguments.get("state")
         ctx = {
+            "manager": manager,
             "span_id": manager.start_span(
                 "node",
                 event="node_start",
@@ -152,7 +152,8 @@ def log_node(fn: Callable[..., Any]) -> Callable[..., Any]:
         return ctx
 
     def after(result: Any, ctx: Dict[str, Any], args: Tuple[Any, ...], kwargs: Dict[str, Any]) -> None:
-        if not ctx:
+        manager = ctx.get("manager")
+        if not manager:
             return
         success, output, next_nodes = (result if isinstance(result, tuple) else (True, result, None))
         bound = _bind_arguments(fn, args, kwargs)
@@ -171,7 +172,8 @@ def log_node(fn: Callable[..., Any]) -> Callable[..., Any]:
         )
 
     def on_error(exc: Exception, ctx: Dict[str, Any], args: Tuple[Any, ...], kwargs: Dict[str, Any]) -> None:
-        if not ctx:
+        manager = ctx.get("manager")
+        if not manager:
             return
         manager.emit(
             {
@@ -194,13 +196,13 @@ def log_node(fn: Callable[..., Any]) -> Callable[..., Any]:
 
 
 def log_tool(tool_id: str, tool_kind: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-    manager = get_log_manager()
-
     def decorator(fn: Callable[..., Any]) -> Callable[..., Any]:
         def before(args: Tuple[Any, ...], kwargs: Dict[str, Any]) -> Dict[str, Any]:
+            manager = get_log_manager()
             if not manager.enabled:
                 return {}
             return {
+                "manager": manager,
                 "span_id": manager.start_span(
                     "tool",
                     event="tool_start",
@@ -212,7 +214,8 @@ def log_tool(tool_id: str, tool_kind: str) -> Callable[[Callable[..., Any]], Cal
             }
 
         def after(result: Any, ctx: Dict[str, Any], args: Tuple[Any, ...], kwargs: Dict[str, Any]) -> None:
-            if not ctx:
+            manager = ctx.get("manager")
+            if not manager:
                 return
             manager.end_span(
                 ctx["span_id"],
@@ -224,7 +227,8 @@ def log_tool(tool_id: str, tool_kind: str) -> Callable[[Callable[..., Any]], Cal
             )
 
         def on_error(exc: Exception, ctx: Dict[str, Any], args: Tuple[Any, ...], kwargs: Dict[str, Any]) -> None:
-            if not ctx:
+            manager = ctx.get("manager")
+            if not manager:
                 return
             manager.emit(
                 {
@@ -248,10 +252,9 @@ def log_tool(tool_id: str, tool_kind: str) -> Callable[[Callable[..., Any]], Cal
 
 
 def log_llm(provider: str | None, model: str | None) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-    manager = get_log_manager()
-
     def decorator(fn: Callable[..., Any]) -> Callable[..., Any]:
         def before(args: Tuple[Any, ...], kwargs: Dict[str, Any]) -> Dict[str, Any]:
+            manager = get_log_manager()
             if not manager.enabled:
                 return {}
             bound = _bind_arguments(fn, args, kwargs)
@@ -266,10 +269,11 @@ def log_llm(provider: str | None, model: str | None) -> Callable[[Callable[..., 
                 model=model,
                 input_summary=manager.summarize(prompt),
             )
-            return {"span_id": span_id, "node_id": getattr(node, "id", None)}
+            return {"span_id": span_id, "node_id": getattr(node, "id", None), "manager": manager}
 
         def after(result: Any, ctx: Dict[str, Any], args: Tuple[Any, ...], kwargs: Dict[str, Any]) -> None:
-            if not ctx:
+            manager = ctx.get("manager")
+            if not manager:
                 return
             meta = {
                 "event": "llm_end",
@@ -282,7 +286,8 @@ def log_llm(provider: str | None, model: str | None) -> Callable[[Callable[..., 
             manager.end_span(ctx["span_id"], **meta)
 
         def on_error(exc: Exception, ctx: Dict[str, Any], args: Tuple[Any, ...], kwargs: Dict[str, Any]) -> None:
-            if not ctx:
+            manager = ctx.get("manager")
+            if not manager:
                 return
             manager.emit(
                 {

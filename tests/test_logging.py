@@ -2,8 +2,10 @@ import json
 import tempfile
 from pathlib import Path
 
+from agent_ethan.logging import configure_tracing, get_log_manager
 from agent_ethan.logging.masking import Masker
 from agent_ethan.logging.sinks import JsonlSink, NullSink
+from agent_ethan.schema import TracingConfig
 
 
 def test_masker_redacts_and_truncates():
@@ -32,3 +34,18 @@ def test_jsonl_sink_writes_lines():
         events = [json.loads(line) for line in content]
         assert events[0]["event"] == "start"
         assert events[1]["event"] == "end"
+
+
+def test_configure_tracing_disabled_by_default():
+    configure_tracing(None)
+    manager = get_log_manager()
+    assert manager.enabled is False
+
+
+def test_configure_tracing_enables_sinks():
+    tracing = TracingConfig(enabled=True, sinks=["stdout"], sample=1.0)
+    try:
+        manager = configure_tracing(tracing)
+        assert manager.enabled is True
+    finally:
+        configure_tracing(None)

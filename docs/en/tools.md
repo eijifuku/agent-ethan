@@ -100,7 +100,7 @@ The MCP response must conform to the tool output schema (status/result/error). M
 | `agent_ethan/tools/arxiv_keywords.py#fallback_keywords` | Uses LLM output when available, otherwise tokenizes the request. |
 | `agent_ethan/tools/arxiv_summary.py#fallback_summary` | Builds a factual report listing the downloaded papers. |
 | `agent_ethan/tools/json_utils.py#parse_object` | Parses a JSON string into a dictionary safely. |
-| LangChain adapter (optional) | Bridge to use LangChain's tool ecosystem (install separately). |
+| LangChain adapter (optional) | Bridge to use LangChain's tool ecosystem (packages are included by default). |
 | `agent_ethan/tools/mock_tools.py` | Test utilities (`echo`, `increment`, `failing`). |
 
 ## 5. Writing Custom Python Tools

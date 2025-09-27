@@ -7,6 +7,31 @@ from typing import Any, Dict, List, Literal, Optional
 from pydantic import BaseModel, Field, PositiveInt, ValidationError, field_validator, model_validator
 
 
+class TracingConfig(BaseModel):
+    """Configuration for structured tracing/logging."""
+
+    enabled: bool = False
+    sinks: List[Literal["stdout", "jsonl", "langsmith", "null"]] = Field(default_factory=list)
+    sample: float = Field(default=1.0, ge=0.0, le=1.0)
+    level: Literal["debug", "info", "warn", "error"] = "info"
+    dir: str = Field(default="./logs")
+    max_text: int = Field(default=2048, ge=0)
+    deny_keys: List[str] = Field(
+        default_factory=lambda: [
+            "api_key",
+            "authorization",
+            "password",
+            "token",
+            "secret",
+            "cookie",
+            "session",
+            "client_secret",
+            "private_key",
+        ]
+    )
+    langsmith_project: Optional[str] = None
+
+
 class RetryConfig(BaseModel):
     """Retry policy for nodes, tools, or defaults."""
 
@@ -27,6 +52,7 @@ class DefaultsConfig(BaseModel):
     temp: float = Field(default=0.3, ge=0.0)
     retry: Optional[RetryConfig] = None
     timeout: Optional[TimeoutConfig] = None
+    tracing: Optional[TracingConfig] = None
 
 
 class MemoryConfig(BaseModel):

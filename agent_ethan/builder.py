@@ -26,7 +26,7 @@ from .providers import (
     create_openai_client,
     create_openai_compatible_client,
 )
-from .logging import get_log_manager
+from .logging import configure_tracing, get_log_manager
 from .logging.decorators import log_run, log_node, log_tool, log_llm
 from .schema import (
     AgentConfig,
@@ -876,6 +876,7 @@ def build_agent_from_yaml(data: Dict[str, Any], base_path: str | Path | None = N
 
     base = Path(base_path or ".").resolve()
     config = load_config(data)
+    configure_tracing(config.meta.defaults.tracing)
     definition = AgentDefinition(config=config, base_path=base)
     prompts = _build_prompt_renderer(config)
     tools = _build_tool_handles(config, base)

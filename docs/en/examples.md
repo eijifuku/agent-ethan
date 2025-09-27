@@ -44,12 +44,11 @@ Combines the runtime graph with LangChain's Chroma vector store and OpenAI embed
 
 - `tools/langchain_rag.py#ChromaRetrievalQATool` loads markdown files from `examples/corpus`, embeds them with `OpenAIEmbeddings`, and builds a Chroma store on the fly.
 - The tool returns both a draft answer and source snippets; an LLM node recomposes the final response using the retrieved context.
-- Set `OPENAI_API_KEY` and install `langchain-openai` / `chromadb` before running.
+- Set `OPENAI_API_KEY`; `langchain-openai` / `chromadb` are bundled so no extra install is required.
 
 ### Execution
 
 ```bash
-pip install langchain-openai chromadb
 export OPENAI_API_KEY=sk-your-key
 python examples/langchain_rag_example.py
 ```
@@ -69,7 +68,6 @@ Demonstrates how to wire LangChain's built-in `VectorStoreQATool` via `tool_over
 ### Execution
 
 ```bash
-pip install langchain-openai chromadb
 export OPENAI_API_KEY=sk-your-key
 python examples/langchain_rag_vectorstore_example.py
 ```
