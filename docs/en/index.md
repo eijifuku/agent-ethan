@@ -5,6 +5,7 @@
 - [Configuration Reference](configuration.md)
 - [Node Catalogue](nodes.md)
 - [Runtime Execution](runtime.md)
+- [Tracing & Logging](logging.md)
 - [Hands-on Tutorial](tutorial.md)
 - [Providers](providers.md)
 - [Tools and Extensions](tools.md)

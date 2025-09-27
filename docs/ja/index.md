@@ -5,6 +5,7 @@
 - [設定リファレンス](configuration.md)
 - [ノード一覧](nodes.md)
 - [ランタイム実行](runtime.md)
+- [トレーシングとロギング](logging.md)
 - [ハンズオンチュートリアル](tutorial.md)
 - [プロバイダ設定](providers.md)
 - [ツールと拡張](tools.md)
