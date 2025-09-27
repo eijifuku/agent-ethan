@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any, Dict, Optional
 
 from ..llm import LLMClient
+from ..logging.decorators import log_llm
 
 
 class ClaudeProviderUnavailable(RuntimeError):
@@ -56,7 +57,7 @@ def create_claude_client(
             "error": None,
         }
 
-    return LLMClient(call=_call)
+    return LLMClient(call=log_llm("claude", model)(_call))
 
 
 def _prompt_to_messages(prompt: Dict[str, Any]) -> list[Dict[str, Any]]:

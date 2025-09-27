@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 
 from ..llm import LLMClient
+from ..logging.decorators import log_llm
 
 
 class GeminiProviderUnavailable(RuntimeError):
@@ -56,7 +57,7 @@ def create_gemini_client(
             "error": None,
         }
 
-    return LLMClient(call=_call)
+    return LLMClient(call=log_llm("gemini", model)(_call))
 
 
 def _prompt_to_parts(prompt: Dict[str, Any]) -> List[Dict[str, Any]]:

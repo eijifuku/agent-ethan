@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 
 from ..llm import LLMClient
+from ..logging.decorators import log_llm
 
 
 class OpenAICompatibleUnavailable(RuntimeError):
@@ -54,7 +55,7 @@ def create_openai_compatible_client(
             "error": None,
         }
 
-    return LLMClient(call=_call)
+    return LLMClient(call=log_llm("openai_compatible", model)(_call))
 
 
 def _default_httpx_client(

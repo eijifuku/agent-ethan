@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 
 from ..llm import LLMClient
+from ..logging.decorators import log_llm
 
 
 class OpenAIUnavailable(RuntimeError):
@@ -59,7 +60,7 @@ def create_openai_client(
             "error": None,
         }
 
-    return LLMClient(call=_call)
+    return LLMClient(call=log_llm("openai", model)(_call))
 
 
 def _default_openai_client(client_kwargs: Optional[Dict[str, Any]] = None) -> Any:

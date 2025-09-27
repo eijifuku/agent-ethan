@@ -26,6 +26,8 @@ from .providers import (
     create_openai_client,
     create_openai_compatible_client,
 )
+from .logging import get_log_manager
+from .logging.decorators import log_run, log_node, log_tool, log_llm
 from .schema import (
     AgentConfig,
     GraphConfig,
@@ -150,6 +152,7 @@ class AgentRuntime:
 
     _EXPRESSION_PATTERN: re.Pattern[str] = re.compile(r"^\s*{{\s*(.+?)\s*}}\s*$")
 
+    @log_run
     def run(
         self,
         inputs: Dict[str, Any],
@@ -247,6 +250,7 @@ class AgentRuntime:
     # Node execution helpers
     # ------------------------------------------------------------------
 
+    @log_node
     def _execute_node(
         self,
         graph: GraphDefinition,
@@ -412,7 +416,9 @@ class AgentRuntime:
         traverse_edges: bool,
     ) -> tuple[bool, Optional[Dict[str, Any]], List[str]]:
         last_output: Optional[Dict[str, Any]] = None
+        iterations = 0
         for _ in range(node.max_iterations):
+            iterations += 1
             body_node = graph.nodes.get(node.body)
             if body_node is None:
                 raise AgentRuntimeError(f"loop node '{node.id}' references unknown body '{node.body}'")
@@ -427,6 +433,17 @@ class AgentRuntime:
                 traverse_edges=False,
             )
             if not success:
+                get_log_manager().emit(
+                    {
+                        "event": "loop_complete",
+                        "level": "error",
+                        "graph": getattr(graph, "name", None),
+                        "node_id": node.id,
+                        "node_type": node.type,
+                        "iterations": iterations,
+                        "status": "error",
+                    }
+                )
                 return False, output, []
             last_output = output
             if node.until:
@@ -437,6 +454,17 @@ class AgentRuntime:
             raise AgentRuntimeError(f"loop node '{node.id}' exceeded max_iterations")
 
         next_nodes = self._edge_targets(graph, node, state, inputs, last_output) if traverse_edges else []
+        get_log_manager().emit(
+            {
+                "event": "loop_complete",
+                "level": "debug",
+                "graph": getattr(graph, "name", None),
+                "node_id": node.id,
+                "node_type": node.type,
+                "iterations": iterations,
+                "status": "ok",
+            }
+        )
         return True, last_output, next_nodes
 
     def _execute_subgraph_node(
@@ -730,6 +758,16 @@ class AgentRuntime:
                 if not self._evaluate_condition(edge.when, context):
                     continue
             targets.append(edge.to)
+        get_log_manager().emit(
+            {
+                "event": "router_decision",
+                "level": "debug",
+                "graph": getattr(graph, "name", None),
+                "node_id": node.id,
+                "node_type": node.type,
+                "targets": targets,
+            }
+        )
         return targets
 
     def _condition_context(
@@ -901,10 +939,11 @@ def _build_tool_handles(config: AgentConfig, base_path: Path) -> Dict[str, ToolH
     handles: Dict[str, ToolHandle] = {}
     for tool in config.tools:
         callable_obj, tool_defaults = _resolve_tool_callable(tool, base_path)
+        wrapped_callable = log_tool(tool.id, tool.kind)(callable_obj)
         handles[tool.id] = ToolHandle(
             id=tool.id,
             kind=tool.kind,
-            callable=callable_obj,
+            callable=wrapped_callable,
             config=tool_defaults,
             retry=tool.retry,
             timeout=tool.timeout,
