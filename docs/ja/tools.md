@@ -187,7 +187,7 @@ return {
 
 ## 6. LangChain クラスツール
 
-LangChain のツールクラスを直接指定する場合は、`mode: class` を設定し、クラスを継承した `BaseTool` を指します。必要なオプション依存を別途インストールしてください。OpenAI 埋め込み + Chroma を使った RAG 例では以下を追加します。
+LangChain のツールクラスを直接指定する場合は、`mode: class` を設定し、クラスを継承した `BaseTool` を指します。LangChain 本体や関連パッケージは標準で同梱されているため、追加インストールなしで利用できます。OpenAI 埋め込み + Chroma を使った RAG 例では以下を追加します。
 
 ```
 pip install langchain-openai chromadb

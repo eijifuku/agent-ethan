@@ -2,80 +2,83 @@
 
 from __future__ import annotations
 
-import os
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Sequence, TYPE_CHECKING
 
-from .context import trace_enabled_var
 from .manager import LogManager
-from .masking import DEFAULT_DENY_KEYS, DEFAULT_REGEXES, Masker, default_masker
+from .masking import DEFAULT_DENY_KEYS, DEFAULT_REGEXES, Masker
 from .sinks import JsonlSink, LangsmithSink, NullSink, Sink, StdoutSink
+
+if TYPE_CHECKING:  # pragma: no cover
+    from agent_ethan.schema import TracingConfig
 
 _LOG_MANAGER: Optional[LogManager] = None
 
 
 def get_log_manager() -> LogManager:
+    """Return the global log manager, creating a disabled instance if needed."""
+
     global _LOG_MANAGER
     if _LOG_MANAGER is None:
-        _LOG_MANAGER = configure_from_env()
+        _LOG_MANAGER = _create_manager(enabled=False)
     return _LOG_MANAGER
 
 
-def configure_from_env() -> LogManager:
-    enabled = _env_flag("AE_TRACE_ENABLED", default=False)
-    sinks = _build_sinks(os.getenv("AE_TRACE_SINKS", "")) if enabled else []
-    sample = float(os.getenv("AE_TRACE_SAMPLE", "1.0"))
-    deny_keys_env = set(_parse_csv(os.getenv("AE_TRACE_DENY_KEYS", "")))
-    max_text = int(os.getenv("AE_TRACE_MAX_TEXT", "2048"))
-    deny_keys = deny_keys_env or DEFAULT_DENY_KEYS
-    masker = Masker(deny_keys=deny_keys, max_text=max_text, regexes=DEFAULT_REGEXES)
-    level = os.getenv("AE_TRACE_LEVEL", "info")
+def configure_tracing(tracing: Optional["TracingConfig"]) -> LogManager:
+    """Configure the global log manager from YAML tracing settings."""
 
-    manager = LogManager(sinks=sinks, sample_rate=sample, masker=masker, level=level)
-    manager.enabled = enabled and bool(sinks)
+    manager = _create_manager(enabled=False)
+    if tracing and tracing.enabled:
+        sinks = _build_sinks(tracing)
+        deny_keys: Iterable[str] = tracing.deny_keys or list(DEFAULT_DENY_KEYS)
+        masker = Masker(deny_keys=deny_keys, max_text=tracing.max_text, regexes=DEFAULT_REGEXES)
+        manager = LogManager(
+            sinks=sinks,
+            sample_rate=tracing.sample,
+            masker=masker,
+            level=getattr(tracing, "level", "info"),
+        )
+        manager.enabled = bool(sinks)
+    set_log_manager(manager)
     return manager
 
 
 def set_log_manager(manager: LogManager) -> None:
+    """Replace the global log manager instance."""
+
     global _LOG_MANAGER
     _LOG_MANAGER = manager
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
+def _create_manager(enabled: bool) -> LogManager:
+    masker = Masker(deny_keys=DEFAULT_DENY_KEYS, max_text=2048, regexes=DEFAULT_REGEXES)
+    manager = LogManager(sinks=[], sample_rate=1.0, masker=masker, level="info")
+    manager.enabled = enabled
+    return manager
 
 
-def _env_flag(name: str, default: bool = False) -> bool:
-    value = os.getenv(name)
-    if value is None:
-        return default
-    return value.lower() in {"1", "true", "yes", "on"}
-
-
-def _parse_csv(value: str) -> Iterable[str]:
-    return [item.strip() for item in value.split(",") if item.strip()]
-
-
-def _build_sinks(config: str) -> list[Sink]:
-    if not config.strip():
-        return [NullSink()]
-
-    sinks: list[Sink] = []
-    tokens = [token.strip().lower() for token in config.split(",") if token.strip()]
+def _build_sinks(tracing: "TracingConfig") -> list[Sink]:
+    tokens: Sequence[str] = getattr(tracing, "sinks", []) or []
     if not tokens:
         return [NullSink()]
 
+    sinks: list[Sink] = []
     for token in tokens:
-        if token == "stdout":
+        normalised = token.lower()
+        if normalised == "stdout":
             sinks.append(StdoutSink())
-        elif token == "jsonl":
-            root = os.getenv("AE_TRACE_DIR", "./logs")
-            sinks.append(JsonlSink(root))
-        elif token == "langsmith":
-            project = os.getenv("AE_TRACE_LANGSMITH_PROJECT")
-            sinks.append(LangsmithSink(project=project))
-        elif token == "null":
+        elif normalised == "jsonl":
+            sinks.append(JsonlSink(tracing.dir))
+        elif normalised == "langsmith":
+            sinks.append(LangsmithSink(project=getattr(tracing, "langsmith_project", None)))
+        elif normalised == "null":
             return [NullSink()]
     if not sinks:
         sinks.append(NullSink())
     return sinks
+
+
+__all__ = [
+    "configure_tracing",
+    "get_log_manager",
+    "set_log_manager",
+]

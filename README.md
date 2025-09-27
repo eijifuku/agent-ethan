@@ -31,7 +31,7 @@ Agent Ethan compiles declarative YAML into an executable workflow. Each configur
 1. **Metadata** – schema version, agent name, default LLM provider/model, retry/timeout defaults, provider-specific settings
 2. **State** – typed fields managed across the graph, with initialization and merge strategy (`deepmerge` or `replace`)
 3. **Prompts** – partials and templates rendered (via Jinja) for LLM nodes
-4. **Tools** – declarative handles mapping to Python callables, HTTP or MCP adapters. Tools included in LangChain are also available (install separately).RAG available via LangChain's RetrievalQA tools through the adapter (optional dependency)
+4. **Tools** – declarative handles mapping to Python callables, HTTP or MCP adapters. Tools included in LangChain are also available.RAG available via LangChain's RetrievalQA tools through the adapter (optional dependency)
 5. **Graph** – nodes (LLM, tool, router, loop, subgraph, noop) and edges describing execution and routing
 6. **Subgraphs** – optional reusable graphs
 
@@ -50,6 +50,8 @@ git clone https://github.com/eijifuku/agent-ethan.git
 cd agent-ethan
 pip install -e .
 ```
+
+The package bundles the official SDKs for OpenAI (`openai`), Google Gemini (`google-generativeai`), and Anthropic Claude (`anthropic`) so the built-in providers work out of the box.
 
 ## Quick Start
 

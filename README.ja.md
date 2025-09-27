@@ -29,7 +29,7 @@ Agent Ethan は宣言的な YAML を実行可能なワークフローへ変換�
 1. **メタ情報** – スキーマ版・エージェント名・既定の LLM プロバイダ／モデル・リトライ／タイムアウト・プロバイダ固有設定
 2. **ステート** – グラフ全体で扱う型付きフィールドと初期化・マージ戦略（`deepmerge` / `replace`）
 3. **プロンプト** – パーシャルとテンプレート（Jinja）を LLM ノードでレンダリング
-4. **ツール** – Python コール／HTTP／MCP へマップする宣言的ハンドル。LangChain に含まれるツールも利用可能です（別途インストール）。LangChainのRetrievalQAツール経由でRAGの利用が可能
+4. **ツール** – Python コール／HTTP／MCP へマップする宣言的ハンドル。LangChain に含まれるツールも利用可能です。LangChainのRetrievalQAツール経由でRAGの利用が可能
 5. **グラフ** – ノード（LLM／ツール／ルーター／ループ／サブグラフ／noop）とエッジで実行・分岐を表現
 6. **サブグラフ** – 再利用可能な部分グラフ（任意）
 
@@ -48,6 +48,8 @@ git clone https://github.com/eijifuku/agent-ethan.git
 cd agent-ethan
 pip install -e .
 ```
+
+OpenAI (`openai`)、Google Gemini (`google-generativeai`)、Anthropic Claude (`anthropic`) の公式 SDK を標準で同梱しているため、付属のプロバイダ設定を追加インストールなしで利用できます。
 
 ## クイックスタート
 

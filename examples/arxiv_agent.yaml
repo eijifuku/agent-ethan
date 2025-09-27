@@ -7,6 +7,10 @@ meta:
     retry:
       max_attempts: 2
       backoff: 1.0
+    tracing:
+      enabled: true
+      sinks:
+        - stdout
   providers:
     openai:
       type: openai
