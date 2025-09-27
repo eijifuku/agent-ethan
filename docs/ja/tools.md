@@ -93,13 +93,13 @@ MCP サーバ側が標準的なレスポンス形式 (`status` / `result` / `err
 
 | ツール | 説明 |
 | ------ | ---- |
-| `tools/local_rag.py#search` | RAG サンプルのローカル検索 |
-| `tools/arxiv_local.py#search` | arXiv Atom API へ複数クエリでアクセス |
-| `tools/arxiv_local.py#download` | PDF をリダイレクト追跡付きで保存し、メタデータを付与 |
-| `tools/arxiv_filter.py#parse_selection` | LLM 出力の JSON を解析。失敗時はキーワード一致で選別 |
-| `tools/arxiv_keywords.py#fallback_keywords` | LLM キーワードが無い場合にヒューリスティック生成 |
-| `tools/arxiv_summary.py#fallback_summary` | 取得済み論文を事実ベースで列挙 |
-| `tools/json_utils.py#parse_object` | 文字列 JSON を辞書に変換 |
+| `agent_ethan/tools/local_rag.py#search` | RAG サンプルのローカル検索 |
+| `agent_ethan/tools/arxiv_local.py#search` | arXiv Atom API へ複数クエリでアクセス |
+| `agent_ethan/tools/arxiv_local.py#download` | PDF をリダイレクト追跡付きで保存し、メタデータを付与 |
+| `agent_ethan/tools/arxiv_filter.py#parse_selection` | LLM 出力の JSON を解析。失敗時はキーワード一致で選別 |
+| `agent_ethan/tools/arxiv_keywords.py#fallback_keywords` | LLM キーワードが無い場合にヒューリスティック生成 |
+| `agent_ethan/tools/arxiv_summary.py#fallback_summary` | 取得済み論文を事実ベースで列挙 |
+| `agent_ethan/tools/json_utils.py#parse_object` | 文字列 JSON を辞書に変換 |
 | `agent_ethan/tools/mock_tools.py` | テスト用 (`echo`, `increment`, `failing`) |
 
 ### LangChain のツールを使う（任意）
@@ -107,6 +107,32 @@ MCP サーバ側が標準的なレスポンス形式 (`status` / `result` / `err
 薄いアダプタ経由で LangChain が提供する豊富なツール群を利用できます（本体には同梱しません）。`langchain` / `langchain-community`（およびツール固有の依存）を各自インストールし、ツール定義でアダプタを参照してインポートパスと入力を渡してください。
 
 ## 5. カスタム Python ツールの規約
+
+### 独自ツールの参照方法
+
+- **YAML ファイルからの相対パス** – リポジトリ利用者は自分のプロジェクト内にモジュールを配置し、YAML から相対パスで参照できます。
+
+  ```yaml
+  tools:
+    - id: my_local_tool
+      kind: python
+      impl: "../my_project_tools/utility.py#my_tool"
+  ```
+
+  エージェントランタイムは YAML ファイルからの相対パスとして解決します。
+
+- **インストール済み Python パッケージ** – カスタムツールがパッケージ化されている場合、ドット区切りの import で指定します。
+
+  ```yaml
+  tools:
+    - id: packaged_tool
+      kind: python
+      impl: "mypkg.tools.utility#my_tool"
+  ```
+
+- **同梱ツールの活用** – サンプルでは `../agent_ethan/tools/...` を参照しています。必要に応じてこのディレクトリ内の実装をそのまま使うか、別モジュールとしてコピーして利用できます。
+
+> 開発時に `pip install -e .` を実行しておくと、プロジェクト内モジュールを import しやすくなります。
 
 ツールは次のキーを含む辞書を返す必要があります。
 

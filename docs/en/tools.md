@@ -93,17 +93,46 @@ The MCP response must conform to the tool output schema (status/result/error). M
 
 | Tool | Description |
 | ---- | ----------- |
-| `tools/local_rag.py#search` | Local corpus search used by the RAG example. |
-| `tools/arxiv_local.py#search` | Queries the arXiv Atom API with fallback queries and de-duplicates results. |
-| `tools/arxiv_local.py#download` | Downloads PDFs, follows redirects, and enriches entries with metadata. |
-| `tools/arxiv_filter.py#parse_selection` | Parses LLM JSON output or falls back to heuristic keyword overlap. |
-| `tools/arxiv_keywords.py#fallback_keywords` | Uses LLM output when available, otherwise tokenizes the request. |
-| `tools/arxiv_summary.py#fallback_summary` | Builds a factual report listing the downloaded papers. |
-| `tools/json_utils.py#parse_object` | Parses a JSON string into a dictionary safely. |
+| `agent_ethan/tools/local_rag.py#search` | Local corpus search used by the RAG example. |
+| `agent_ethan/tools/arxiv_local.py#search` | Queries the arXiv Atom API with fallback queries and de-duplicates results. |
+| `agent_ethan/tools/arxiv_local.py#download` | Downloads PDFs, follows redirects, and enriches entries with metadata. |
+| `agent_ethan/tools/arxiv_filter.py#parse_selection` | Parses LLM JSON output or falls back to heuristic keyword overlap. |
+| `agent_ethan/tools/arxiv_keywords.py#fallback_keywords` | Uses LLM output when available, otherwise tokenizes the request. |
+| `agent_ethan/tools/arxiv_summary.py#fallback_summary` | Builds a factual report listing the downloaded papers. |
+| `agent_ethan/tools/json_utils.py#parse_object` | Parses a JSON string into a dictionary safely. |
 | LangChain adapter (optional) | Bridge to use LangChain's tool ecosystem (install separately). |
 | `agent_ethan/tools/mock_tools.py` | Test utilities (`echo`, `increment`, `failing`). |
 
 ## 5. Writing Custom Python Tools
+
+### Referencing Custom Tools
+
+- **Relative path to the YAML file** – Place your module alongside the YAML and use a relative import:
+
+  ```yaml
+  tools:
+    - id: my_local_tool
+      kind: python
+      impl: "../my_project_tools/utility.py#my_tool"
+  ```
+
+  The runtime resolves the path relative to the YAML file. This is the recommended approach when shipping a project repository.
+
+- **Installed Python package** – If your tool lives in an installed package, reference it via dotted import:
+
+  ```yaml
+  tools:
+    - id: packaged_tool
+      kind: python
+      impl: "mypkg.tools.utility#my_tool"
+  ```
+
+  As long as `mypkg` is importable (e.g., via `pip install`), the runtime loads it directly.
+
+- **Bundled helpers** – The repository’s examples reference `../agent_ethan/tools/...`; you can use these as-is or copy their patterns into your own modules.
+
+> Tip: when developing locally, run `pip install -e .` for your project so that any custom tool modules become importable.
+
 
 Create a Python module whose function returns a dictionary with the following keys:
 
