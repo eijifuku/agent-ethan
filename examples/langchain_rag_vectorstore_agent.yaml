@@ -1,0 +1,66 @@
+meta:
+  schema_version: 1
+  name: langchain_rag_vectorstore
+  defaults:
+    llm: openai:gpt-4o-mini
+
+state:
+  shape:
+    query: str
+    answer: str | null
+    sources: list[dict]
+    preliminary_answer: str | null
+  reducer: deepmerge
+  init:
+    answer: null
+    sources: []
+    preliminary_answer: null
+
+prompts:
+  partials:
+    instructions: |
+      Answer concisely using the provided context. If unsure, say you do not know.
+  templates:
+    compose:
+      system: "{{> instructions }}"
+      assistant: |
+        Draft answer from retriever: {{ preliminary_answer }}
+      user: |
+        Question: {{ query }}
+        Context:
+        {%- for item in sources %}
+        - {{ item.snippet }} ({{ item.source }})
+        {%- endfor %}
+
+memory:
+  enabled: false
+
+tools:
+  - id: qa_tool
+    kind: python
+    impl: "../tools/langchain_stub.py#requires_override"
+
+graph:
+  inputs: [query]
+  outputs: [answer, sources]
+  nodes:
+    - id: retrieve
+      type: tool
+      uses: qa_tool
+      inputs:
+        query: "{{ query }}"
+      map:
+        set:
+          sources: "{{ result['items'] }}"
+          preliminary_answer: "{{ result['json']['answer'] }}"
+
+    - id: summarise
+      type: llm
+      prompt: compose
+      map:
+        set:
+          answer: "{{ output.text }}"
+
+  edges:
+    - from: retrieve
+      to: summarise

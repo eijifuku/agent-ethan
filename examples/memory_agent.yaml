@@ -1,0 +1,60 @@
+meta:
+  schema_version: 1
+  name: memory_demo
+  defaults:
+    temp: 0.0
+
+state:
+  shape:
+    query: str
+    messages: list[dict]
+    messages_window: list[dict]
+    session_id: str | null
+  reducer: deepmerge
+  init:
+    messages: []
+    messages_window: []
+    session_id: null
+
+memory:
+  enabled: true
+  type: langchain_history
+  kind: file
+  path: "./data/history-{session_id}.jsonl"
+  session_key: session_id
+  k: 5
+
+prompts:
+  partials:
+    sys: "You are a helpful assistant."
+  templates:
+    fallback:
+      system: "{{> sys }}"
+      user: "{{ query }}"
+
+tools:
+  - id: echo_tool
+    kind: python
+    impl: "../tools/mock_tools.py#echo"
+
+graph:
+  inputs: [query, session_id]
+  outputs: [messages]
+  nodes:
+    - id: record_user
+      type: noop
+      map:
+        set:
+          messages: "{{ (state.messages or []) + [{'type': 'human', 'role': 'user', 'content': query}] }}"
+    - id: respond
+      type: tool
+      uses: echo_tool
+      inputs:
+        json:
+          text: "Echo: {{ query }}"
+      map:
+        set:
+          messages: "{{ state.messages + [{'type': 'ai', 'role': 'assistant', 'content': result.json.text}] }}"
+  edges:
+    - from: record_user
+      to: respond

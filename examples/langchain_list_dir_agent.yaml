@@ -1,0 +1,41 @@
+meta:
+  schema_version: 1
+  name: langchain_list_directory
+  defaults:
+    temp: 0.0
+
+state:
+  shape:
+    directory: str
+    entries: str | null
+  reducer: replace
+  init:
+    entries: null
+
+prompts:
+  partials: {}
+  templates:
+    placeholder:
+      system: "This agent only calls tools."
+
+tools:
+  - id: list_directory
+    kind: langchain
+    mode: class
+    impl: "langchain_community.tools.file_management.list_dir#ListDirectoryTool"
+    config:
+      init:
+        root_dir: "."
+
+graph:
+  inputs: [directory]
+  outputs: [entries]
+  nodes:
+    - id: list
+      type: tool
+      uses: list_directory
+      inputs:
+        dir_path: "{{ inputs.directory }}"
+      map:
+        set:
+          entries: "{{ result.text }}"

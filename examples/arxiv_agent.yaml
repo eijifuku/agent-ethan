@@ -1,0 +1,200 @@
+meta:
+  schema_version: 1
+  name: arxiv_keyword_agent
+  defaults:
+    llm: local:google/gemma-3-12b
+    temp: 0.2
+    retry:
+      max_attempts: 2
+      backoff: 1.0
+  providers:
+    local:
+      type: openai_compatible
+      base_url: "{{env.OPENAI_COMPATIBLE_BASE_URL}}"
+      model: google/gemma-3-12b
+      temperature: 0.2
+      request_timeout: 120
+      kwargs:
+        max_tokens: 2048
+
+state:
+  shape:
+    request: str
+    keywords: str | null
+    keywords_llm: str | null
+    search_results: list[dict]
+    relevance_raw: str | null
+    relevant_ids: list[str]
+    rationale: str | null
+    downloads: list[dict]
+    summary: str | null
+  reducer: deepmerge
+  init:
+    relevant_ids: []
+    downloads: []
+    relevance_raw: ""
+    keywords: ""
+    keywords_llm: ""
+
+prompts:
+  partials:
+    sys_keywords: |
+      You are a research assistant creating concise search keywords for arXiv.
+      - Only output a single line of comma-separated keyword phrases.
+      - Do not include explanations or extra words.
+    sys_filter: |
+      You are an expert assistant selecting relevant arXiv papers.
+      - You must respond with valid JSON.
+      - The JSON must contain keys "relevant_ids" (array of strings) and "reason" (string).
+      - Only include papers relevant to the user's request.
+      - If nothing matches, return an empty array.
+    sys_summary: |
+      You produce a short factual report of downloaded papers.
+      - Only use information explicitly provided in the user content.
+      - Do not speculate, invent details, or add expectations.
+  templates:
+    generate_keywords:
+      system: "{{> sys_keywords }}"
+      user: |
+        User request: {{ request }}
+    filter_results:
+      system: "{{> sys_filter }}"
+      user: |
+        User request: {{ request }}
+        Search results:
+        {%- for item in search_results %}
+        - id: {{ item.id }}
+          title: {{ item.title }}
+          summary: {{ item.summary }}
+        {%- endfor %}
+    summarize:
+      system: "{{> sys_summary }}"
+      user: |
+        User request: {{ request }}
+        Selected papers:
+        {%- for item in downloads %}
+        - id: {{ item.id }} | title: {{ item.title }} | stored_at: {{ item.path }}
+        {%- endfor %}
+
+
+tools:
+  - id: arxiv_search
+    kind: python
+    impl: "../tools/arxiv_local.py#search"
+  - id: arxiv_download
+    kind: python
+    impl: "../tools/arxiv_local.py#download"
+  - id: keyword_fallback
+    kind: python
+    impl: "../tools/arxiv_keywords.py#fallback_keywords"
+  - id: summary_fallback
+    kind: python
+    impl: "../tools/arxiv_summary.py#fallback_summary"
+  - id: arxiv_select
+    kind: python
+    impl: "../tools/arxiv_filter.py#parse_selection"
+
+
+graph:
+  inputs: [request]
+  outputs: [keywords, downloads, summary]
+  nodes:
+    - id: keywords
+      type: llm
+      prompt: generate_keywords
+      on_error:
+        resume: true
+      map:
+        set:
+          keywords_llm: "{{ result.text.strip() }}"
+
+    - id: ensure_keywords
+      type: tool
+      uses: keyword_fallback
+      inputs:
+        request: "{{ state.request }}"
+        llm_keywords: "{{ state.keywords_llm }}"
+      map:
+        set:
+          keywords: "{{ result.json['keywords'] }}"
+
+    - id: search
+      type: tool
+      uses: arxiv_search
+      inputs:
+        query: "{{ state.keywords }}"
+        # Optional tuning passed from top-level params
+        page_size: "{{ inputs.get('page_size', 50) }}"
+        max_results: "{{ inputs.get('search_max', 200) }}"
+        sort_by: "{{ inputs.get('sort_by', 'relevance') }}"
+        sort_order: "{{ inputs.get('sort_order', 'descending') }}"
+      map:
+        set:
+          search_results: "{{ result.json['items'] }}"
+
+    - id: filter
+      type: llm
+      prompt: filter_results
+      on_error:
+        resume: true
+      map:
+        set:
+          relevance_raw: "{{ result.text }}"
+
+    - id: parse
+      type: tool
+      uses: arxiv_select
+      inputs:
+        raw_text: "{{ state.relevance_raw | default('') }}"
+        search_results: "{{ state.search_results }}"
+        keywords: "{{ state.keywords }}"
+        max_results: "{{ inputs.get('selection_max', 12) }}"
+      map:
+        set:
+          relevant_ids: "{{ result.json['relevant_ids'] }}"
+          rationale: "{{ result.json['reason'] }}"
+
+    - id: download
+      type: tool
+      uses: arxiv_download
+      inputs:
+        paper_ids: "{{ state.relevant_ids }}"
+        search_results: "{{ state.search_results }}"
+      map:
+        set:
+          downloads: "{{ result.json['downloads'] }}"
+
+    - id: summarize
+      type: llm
+      prompt: summarize
+      on_error:
+        resume: true
+      map:
+        set:
+          summary: "{{ result.text.strip() }}"
+
+    - id: ensure_summary
+      type: tool
+      uses: summary_fallback
+      inputs:
+        downloads: "{{ state.downloads }}"
+        llm_summary: "{{ state.summary }}"
+      map:
+        set:
+          summary: "{{ result.json['summary'] }}"
+
+  edges:
+    - from: keywords
+      to: ensure_keywords
+    - from: ensure_keywords
+      to: search
+    - from: search
+      to: filter
+    - from: filter
+      to: parse
+    - from: parse
+      to: download
+    - from: download
+      to: summarize
+    - from: summarize
+      to: ensure_summary

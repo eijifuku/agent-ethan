@@ -1,0 +1,70 @@
+meta:
+  schema_version: 1
+  name: rag_agent
+  defaults:
+    llm: local:google/gemma-3-12b
+    temp: 0.3
+    retry:
+      max_attempts: 2
+      backoff: 1.5
+  providers:
+    local:
+      type: openai_compatible
+      base_url: "{{env.OPENAI_COMPATIBLE_BASE_URL}}"
+      model: google/gemma-3-12b
+      temperature: 0.5
+      request_timeout: 180
+      kwargs:
+        max_tokens: 8192
+
+state:
+  shape:
+    query: str
+    context: list[dict]
+    answer: str | null
+  reducer: deepmerge
+  init:
+    context: []
+
+prompts:
+  partials:
+    sys_base: |
+      あなたは正確に日本語で答えるアシスタントです。
+  templates:
+    answer:
+      system: "{{> sys_base }}"
+      user: |
+        質問: {{ query }}
+        コンテキスト: {{ context }}
+
+tools:
+  - id: mcp_call
+    kind: mcp
+    impl: "../tools/mcp_call.py#invoke"
+  - id: local_search
+    kind: python
+    impl: "../tools/local_rag.py#search"
+
+graph:
+  inputs: [query]
+  outputs: [answer]
+  nodes:
+    - id: search
+      type: tool
+      uses: local_search
+      inputs:
+        query: "{{ query }}"
+      map:
+        set:
+          context: "{{ result['items'] }}"
+
+    - id: generate
+      type: llm
+      prompt: answer
+      map:
+        set:
+          answer: "{{ output.text }}"
+
+  edges:
+    - from: search
+      to: generate
